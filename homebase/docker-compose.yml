@@ -1,0 +1,64 @@
+version: '3'                                                                                                                                                                                                       
+services:                                                                                                                                                                                                          
+  mqtt:                                                                                                                                                                                                            
+    image: eclipse-mosquitto                                                                                                                                                                                       
+    restart: always                                                                                                                                                                                                
+    container_name: mosquitto                                                                                                                                                                                      
+    user: root:root                                                                                                                                                                                                
+    expose:                                                                                                                                                                                                        
+        - "1883"                                                                                                                                                                                                   
+        - "8883"                                                                                                                                                                                                   
+        - "9001"                                                                                                                                                                                                   
+    ports:                                                                                                                                                                                                         
+        - "1883:1883"                                                                                                                                                                                              
+        - "8883:8883"                                                                                                                                                                                              
+        - "9001:9001"                                                                                                                                                                                              
+    volumes:                                                                                                                                                                                                       
+      - ./mosquitto/config:/mosquitto/config                                                                                                                                                 
+      - ./mosquitto/log:/mosquitto/log                                                                                                                                                       
+      - ./mosquitto/data:/mosquitto/data                                                                                                                                                     
+      - /etc/localtime:/etc/localtime:ro
+
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - ./homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8123:8123"     
+
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered
+    ports:
+      - "1880:1880"    
+    restart: on-failure
+    volumes:
+     - ./nodered:/data
+
+  esphome:
+    container_name: esphome
+    image: esphome/esphome
+    expose:                                                                                                                                                                                                        
+      - "6052"                                                                                                                                                                                                   
+    ports:                                                                                                                                                                                                         
+      - "6052:6052"                                                                                                                                                                                              
+    volumes:
+      - ./esphome:/config
+      - /etc/localtime:/etc/localtime:ro
+    restart: always
+    privileged: true
+
+  portainer:
+    image: portainer/portainer:latest
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    ports:
+      - 9000:9000
+      - 8000:8000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./portainer:/data
